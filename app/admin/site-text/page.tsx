@@ -54,7 +54,7 @@ const GROUPS = [
   },
 ];
 
-type Field = { key: string; label: string; long?: boolean };
+type FieldDef = { key: string; label: string; long?: boolean };
 
 export default function SiteTextPage() {
   const [content, setContent] = useState<Record<string, string>>({});
@@ -92,7 +92,7 @@ export default function SiteTextPage() {
     setTimeout(() => setToast(null), 3500);
   }
 
-  function Field({ key, label, long }: Field) {
+  function Field({ fieldKey, label, long }: { fieldKey: string; label: string; long?: boolean }) {
     const cls =
       "w-full rounded-lg border border-[#e8d5c0] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#2d1b0e] outline-none focus:border-[#c8873a] focus:ring-2 focus:ring-[#c8873a]/20";
     return (
@@ -101,15 +101,15 @@ export default function SiteTextPage() {
         {long ? (
           <textarea
             rows={3}
-            value={content[key] ?? ""}
-            onChange={(e) => setContent((p) => ({ ...p, [key]: e.target.value }))}
+            value={content[fieldKey] ?? ""}
+            onChange={(e) => setContent((p) => ({ ...p, [fieldKey]: e.target.value }))}
             className={`${cls} resize-y`}
           />
         ) : (
           <input
             type="text"
-            value={content[key] ?? ""}
-            onChange={(e) => setContent((p) => ({ ...p, [key]: e.target.value }))}
+            value={content[fieldKey] ?? ""}
+            onChange={(e) => setContent((p) => ({ ...p, [fieldKey]: e.target.value }))}
             className={cls}
           />
         )}
@@ -155,7 +155,7 @@ export default function SiteTextPage() {
             </h2>
             <div className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
               {group.fields.map((f) => (
-                <Field key={f.key} {...f} />
+                <Field key={f.key} fieldKey={f.key} label={f.label} long={f.long} />
               ))}
             </div>
           </section>
