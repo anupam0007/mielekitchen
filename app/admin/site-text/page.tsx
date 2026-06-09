@@ -154,8 +154,8 @@ export default function SiteTextPage() {
               {group.title}
             </h2>
             <div className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5">
-              {group.fields.map((f) => (
-                <Field key={f.key} {...f} />
+              {group.fields.map(({ key, ...rest }) => (
+                <Field key={key} {...rest} />
               ))}
             </div>
           </section>
