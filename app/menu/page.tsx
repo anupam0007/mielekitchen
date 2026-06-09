@@ -1,23 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import HoneycombPattern from "@/components/HoneycombPattern";
 import { CATEGORIES, MENU_ITEMS, type Category, type MenuItem } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/browser";
+import { toMenuItem, type DbProduct } from "@/lib/supabase/public";
 
 const FILTERS: Array<Category | "All"> = ["All", ...CATEGORIES];
 
 export default function MenuPage() {
   const [activeFilter, setActiveFilter] = useState<Category | "All">("All");
   const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(MENU_ITEMS);
+
+  useEffect(() => {
+    createClient()
+      .from("products")
+      .select("*, product_images(*)")
+      .eq("status", "active")
+      .order("category")
+      .order("sort_order")
+      .then(({ data }) => {
+        const rows = data as DbProduct[] | null;
+        if (rows && rows.length > 0) setMenuItems(rows.map(toMenuItem));
+      });
+  }, []);
 
   const categoriesToShow = activeFilter === "All" ? CATEGORIES : [activeFilter];
 
   const eagerIds = useMemo(() => {
-    const firstRow = MENU_ITEMS.filter((item) => categoriesToShow.includes(item.category)).slice(0, 3);
+    const firstRow = menuItems.filter((item) => categoriesToShow.includes(item.category as Category)).slice(0, 3);
     return new Set(firstRow.map((item) => item.id));
-  }, [categoriesToShow]);
+  }, [categoriesToShow, menuItems]);
 
   return (
     <div className="relative overflow-hidden">
@@ -62,7 +78,7 @@ export default function MenuPage() {
 
         <div className="flex flex-col gap-14">
           {categoriesToShow.map((category) => {
-            const items = MENU_ITEMS.filter((item) => item.category === category);
+            const items = menuItems.filter((item) => item.category === category);
             if (items.length === 0) return null;
 
             return (

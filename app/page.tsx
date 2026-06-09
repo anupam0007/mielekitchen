@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import DishImage from "@/components/DishImage";
 import Hero from "@/components/Hero";
@@ -9,6 +9,8 @@ import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import { MENU_ITEMS, type MenuItem } from "@/lib/mock-data";
 import { GENERAL_ENQUIRY_LINK } from "@/lib/whatsapp";
+import { createClient } from "@/lib/supabase/browser";
+import { toMenuItem, type DbProduct } from "@/lib/supabase/public";
 
 const MARQUEE_ITEMS = [
   "Freshly made to order",
@@ -26,10 +28,24 @@ const KITCHEN_TOUR: Array<{ src: string; caption: string; gradient: [string, str
   { src: "/kitchen/kitchen-4.jpg", caption: "Boxed up and ready to go", gradient: ["#e8ebdd", "#586352"] },
 ];
 
-const featured = MENU_ITEMS.filter((item) => item.featured);
-
 export default function Home() {
   const [activeItem, setActiveItem] = useState<MenuItem | null>(null);
+  const [featured, setFeatured] = useState<MenuItem[]>(
+    MENU_ITEMS.filter((item) => item.featured)
+  );
+
+  useEffect(() => {
+    createClient()
+      .from("products")
+      .select("*, product_images(*)")
+      .eq("featured", true)
+      .eq("status", "active")
+      .order("sort_order")
+      .then(({ data }) => {
+        const rows = data as DbProduct[] | null;
+        if (rows && rows.length > 0) setFeatured(rows.map(toMenuItem));
+      });
+  }, []);
 
   return (
     <>

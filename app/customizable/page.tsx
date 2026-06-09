@@ -4,18 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import HoneycombPattern from "@/components/HoneycombPattern";
 import { whatsappLink } from "@/lib/whatsapp";
+import { createClient } from "@/lib/supabase/browser";
+import { toSlot, type CusDbItem, type CusSlot as Slot } from "@/lib/supabase/public";
 
-interface Slot {
-  src: string;
-  code: string;
-}
-
-const CAKE_SLOTS: Slot[] = Array.from({ length: 17 }, (_, i) => ({
+const DEFAULT_CAKE_SLOTS: Slot[] = Array.from({ length: 17 }, (_, i) => ({
   src: `/customizable/cakes/cake-${String(i + 1).padStart(2, "0")}.jpg`,
   code: `C${i + 1}`,
 }));
 
-const BENTO_SLOTS: Slot[] = Array.from({ length: 12 }, (_, i) => ({
+const DEFAULT_BENTO_SLOTS: Slot[] = Array.from({ length: 12 }, (_, i) => ({
   src: `/customizable/bento/bento-${String(i + 1).padStart(2, "0")}.jpg`,
   code: `B${i + 1}`,
 }));
@@ -131,6 +128,24 @@ function Lightbox({ slot, onClose }: { slot: Slot | null; onClose: () => void })
 
 export default function CustomizablePage() {
   const [active, setActive] = useState<Slot | null>(null);
+  const [cakeSlots, setCakeSlots] = useState<Slot[]>(DEFAULT_CAKE_SLOTS);
+  const [bentoSlots, setBentoSlots] = useState<Slot[]>(DEFAULT_BENTO_SLOTS);
+
+  useEffect(() => {
+    createClient()
+      .from("customizable_items")
+      .select("*, customizable_images(*)")
+      .order("gallery")
+      .order("sort_order")
+      .then(({ data }) => {
+        const rows = data as CusDbItem[] | null;
+        if (!rows || rows.length === 0) return;
+        const cakes = rows.filter((r) => r.gallery === "cakes");
+        const bento = rows.filter((r) => r.gallery === "bento");
+        if (cakes.length > 0) setCakeSlots(cakes.map((item, i) => toSlot(item, i)));
+        if (bento.length > 0) setBentoSlots(bento.map((item, i) => toSlot(item, i)));
+      });
+  }, []);
 
   return (
     <div className="relative overflow-hidden">
@@ -151,8 +166,8 @@ export default function CustomizablePage() {
       </section>
 
       {[
-        { title: "Cakes", slots: CAKE_SLOTS },
-        { title: "Bento Cakes", slots: BENTO_SLOTS },
+        { title: "Cakes", slots: cakeSlots },
+        { title: "Bento Cakes", slots: bentoSlots },
       ].map(({ title, slots }, sectionIndex) => (
         <section
           key={title}
