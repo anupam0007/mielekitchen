@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: "Site Text", href: "/admin/site-text", icon: "✎" },
   { label: "Menu", href: "/admin/menu", icon: "☰" },
   { label: "Customizable Cakes", href: "/admin/customizable", icon: "◈" },
+  { label: "Seed Database", href: "/admin/seed", icon: "⟳" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
